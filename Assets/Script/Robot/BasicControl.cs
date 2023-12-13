@@ -141,6 +141,8 @@ public class BasicControl : MonoBehaviour
 
             if (!jumpable && rb.velocity.y < 0)
             {
+                isGrounded = false;
+                animator.SetBool("onGround", false);
                 animator.ResetTrigger("landing");
                 animator.SetTrigger("falling");
             }
