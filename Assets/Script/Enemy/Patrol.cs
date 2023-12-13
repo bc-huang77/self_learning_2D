@@ -6,7 +6,7 @@ public class Patrol : MonoBehaviour
 {
     public Transform[] waypoints; // 路径点数组
     public float speed = 2f; // 移动速度
-
+    public bool moveable = true;  
     private int waypointIndex = 0; // 当前目标路径点索引
 
     // Start is called before the first frame update
@@ -18,7 +18,11 @@ public class Patrol : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        MoveTowardsWaypoint();
+        if (moveable)
+        {
+            MoveTowardsWaypoint();
+        }
+        
     }
 
     void MoveTowardsWaypoint()
@@ -31,5 +35,11 @@ public class Patrol : MonoBehaviour
         {
             waypointIndex = (waypointIndex + 1) % waypoints.Length; // 移动到下一个路径点
         }
+    }
+
+    public Vector3 HotCircleFrozen()
+    {
+        moveable = false;
+        return waypoints[waypointIndex].position;
     }
 }
