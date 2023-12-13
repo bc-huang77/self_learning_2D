@@ -1,22 +1,26 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class BasicControl : MonoBehaviour
 {
     //Basic
-    public float moveSpeed = 5f; // 角色移动速度
-    public float jumpForce = 5f; // 跳跃力量
+    public float moveSpeed = 5f; // ½ÇÉ«ÒÆ¶¯ËÙ¶È
+    public float jumpForce = 5f; // ÌøÔ¾Á¦Á¿
     private Rigidbody2D rb;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private float faceRight = 1;
-    private bool isGrounded; // 用于检测角色是否在地面上
+    private bool isGrounded; // ÓÃÓÚ¼ì²â½ÇÉ«ÊÇ·ñÔÚµØÃæÉÏ
     private bool canMove;
     private InputBuffer jumpBuffer;
     public float jumpBufferTime = 0.1f;
+    public LayerMask groundLayer; // 用于过滤射线检测的 Layer
+    public float groundCheckDistance = 1f; // 射线检测的距离
+    public bool jumpable = true;
 
     //Shoot
     public float bulletSpeed = 2f;
@@ -33,6 +37,8 @@ public class BasicControl : MonoBehaviour
     private float heatUsed = 0;
     private bool overHeat;
     public Color overHeatColor;
+    public float hurtProtectTime = 0.5f;
+    private float lastHurtTime = 0f;
 
 
     private enum States
@@ -41,7 +47,7 @@ public class BasicControl : MonoBehaviour
         Walking,
         Running,
         Jumping,
-        // 添加其他状态...
+        // Ìí¼ÓÆäËû×´Ì¬...
     }
     private States states;
 
@@ -52,8 +58,8 @@ public class BasicControl : MonoBehaviour
         jumpBuffer.bufferTime = jumpBufferTime;
         jumpBuffer.setCommand("Jump");
 
-        rb = GetComponent<Rigidbody2D>(); // 获取Rigidbody2D组件
-        animator = GetComponent<Animator>();//获取Animator组件
+        rb = GetComponent<Rigidbody2D>(); // »ñÈ¡Rigidbody2D×é¼þ
+        animator = GetComponent<Animator>();//»ñÈ¡Animator×é¼þ
         spriteRenderer = GetComponent<SpriteRenderer>();
         states = States.Idle;
         canMove = true;
@@ -62,26 +68,52 @@ public class BasicControl : MonoBehaviour
 
     void Update() 
     {
+        CheckGround();
         doMovement();
         doShoot();
         heatUIUpdate();
     }
 
-    // 用于检测角色是否接触地面
+    void CheckGround()
+    {
+        // 射线的起点为角色的位置，方向向下
+        Vector2 position = transform.position + new Vector3(0.2f, 0f, 0f);
+        Vector2 position2 = transform.position - new Vector3(0.2f, 0f, 0f);
+        Vector2 direction = Vector2.down;
+        
+
+        RaycastHit2D hit = Physics2D.Raycast(position, direction, groundCheckDistance, groundLayer);
+        RaycastHit2D hit2 = Physics2D.Raycast(position2, direction, groundCheckDistance, groundLayer);
+        jumpable = false;
+        if (hit.collider != null && hit.collider.CompareTag("Ground"))
+        {
+            jumpable = true;
+            animator.SetTrigger("landing");
+        }
+        if (hit2.collider != null && hit2.collider.CompareTag("Ground"))
+        {
+            jumpable = true;
+            animator.SetTrigger("landing");
+        }
+
+        UnityEngine.Debug.DrawRay(position, direction * groundCheckDistance, Color.red);
+        UnityEngine.Debug.DrawRay(position2, direction * groundCheckDistance, Color.red);
+        
+    }
+
+    
     void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
-            animator.SetTrigger("landing");
+            //animator.SetTrigger("landing");
             animator.ResetTrigger("falling");
             animator.ResetTrigger("jumping"); 
-            isGrounded = true; // 如果接触到的是“地面”对象，设置isGrounded为true
+            isGrounded = true; // Èç¹û½Ó´¥µ½µÄÊÇ¡°µØÃæ¡±¶ÔÏó£¬ÉèÖÃisGroundedÎªtrue
+            animator.SetBool("onGround", true);
         }  
     }
 
-    /*
-    void OnCollisionExit2D(Collision2D collision)
-    {*/
 
     private void doMovement()
     {
@@ -90,14 +122,14 @@ public class BasicControl : MonoBehaviour
             
             if (!overHeat)
             {
-                // 检测跳跃按键（默认为“空格键”）
-                if (jumpBuffer.output && isGrounded)
+                // ¼ì²âÌøÔ¾°´¼ü£¨Ä¬ÈÏÎª¡°¿Õ¸ñ¼ü¡±£©
+                if (jumpBuffer.output && isGrounded && jumpable)
                 {
                     states = States.Jumping;
-                    rb.velocity = new Vector2(rb.velocity.x, jumpForce); // 添加垂直速度以实现跳跃
+                    rb.velocity = new Vector2(rb.velocity.x, jumpForce); // Ìí¼Ó´¹Ö±ËÙ¶ÈÒÔÊµÏÖÌøÔ¾
                     animator.SetTrigger("jumping");
-                    animator.ResetTrigger("landing");
                     isGrounded = false;
+                    animator.SetBool("onGround", false);
                     heatUsed += jumpCost;
                 }
                 if (Input.GetButtonUp("Jump"))
@@ -107,20 +139,22 @@ public class BasicControl : MonoBehaviour
             }
 
 
-            if (!isGrounded && rb.velocity.y < 0)
+            if (!jumpable && rb.velocity.y < 0)
             {
+                animator.ResetTrigger("landing");
                 animator.SetTrigger("falling");
             }
 
-            // 水平移动
-            float moveInput = Input.GetAxis("Horizontal"); // 获取水平轴（A/D或左右箭头）输入
+
+            // Ë®Æ½ÒÆ¶¯
+            float moveInput = Input.GetAxis("Horizontal"); // »ñÈ¡Ë®Æ½Öá£¨A/D»ò×óÓÒ¼ýÍ·£©ÊäÈë
             if (moveInput != 0 && faceRight * moveInput < 0)
             {
                 spriteRenderer.flipX = !spriteRenderer.flipX;
                 faceRight *= -1;
                 //Debug.Log("FlipX");
             }
-            rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y); // 设置水平速度
+            rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y); // ÉèÖÃË®Æ½ËÙ¶È
             animator.SetFloat("speed", Math.Abs(rb.velocity.x));
 
 
@@ -138,7 +172,7 @@ public class BasicControl : MonoBehaviour
                 lastShotTime = Time.time;
                 Vector2 bias = faceRight == 1 ? new Vector2(0.55f, -0.15f) : new Vector2(-0.6f, -0.15f);
                 GameObject bullet = Instantiate(bulletPrefab, rb.position + bias, Quaternion.identity);
-                bullet.GetComponent<Rigidbody2D>().velocity = faceRight * transform.right * bulletSpeed; // 设置子弹速度
+                bullet.GetComponent<Rigidbody2D>().velocity = faceRight * transform.right * bulletSpeed; // ÉèÖÃ×Óµ¯ËÙ¶È
                 bullet.GetComponent<SpriteRenderer>().flipX = faceRight == 1 ? false : true;
 
                 heatUsed += shootCost;
@@ -149,6 +183,29 @@ public class BasicControl : MonoBehaviour
         {
             animator.SetBool("shoot", false);
         }
+    }
+    private void heatUIUpdate()
+    {   
+        if(heatUsed >= heatLimit)
+        {
+            heatUsed = heatLimit;
+            overHeat = true;
+            GetComponent<SpriteRenderer>().color = overHeatColor;
+            heatUI.GetComponent<HeatUIControl>().UseOverHeatColor();
+        }
+        if (overHeat)
+        {
+            if(heatUsed < 1)
+            {
+                GetComponent<SpriteRenderer>().color = Color.white;
+                overHeat = false;
+                heatUI.GetComponent<HeatUIControl>().UseNormalColor();
+            }
+        }
+        float rS = overHeat ? overHeatReduceSpeed : reduceSpeed;
+        heatUsed = Math.Max(0, heatUsed - rS * Time.deltaTime);
+
+        heatUI.GetComponent<HeatUIControl>().SetWidthPercentage(heatUsed / heatLimit);
     }
 
     public void jumpEnd()
@@ -171,26 +228,15 @@ public class BasicControl : MonoBehaviour
         canMove = true;
     }
 
-    private void heatUIUpdate()
-    {   
-        if(heatUsed >= heatLimit)
+    public void HeatHurt(float heat)
+    {
+        if(Time.time - lastHurtTime > hurtProtectTime)
         {
-            overHeat = true;
-            GetComponent<SpriteRenderer>().color = overHeatColor;
-            heatUI.GetComponent<HeatUIControl>().UseOverHeatColor();
+            heatUsed += heat;
+            lastHurtTime = Time.time;
         }
-        if (overHeat)
-        {
-            if(heatUsed < 1)
-            {
-                GetComponent<SpriteRenderer>().color = Color.white;
-                overHeat = false;
-                heatUI.GetComponent<HeatUIControl>().UseNormalColor();
-            }
-        }
-        float rS = overHeat ? overHeatReduceSpeed : reduceSpeed;
-        heatUsed = Math.Max(0, heatUsed - rS * Time.deltaTime);
 
-        heatUI.GetComponent<HeatUIControl>().SetWidthPercentage(heatUsed / heatLimit);
     }
+
+
 }
