@@ -6,10 +6,14 @@ using UnityEngine;
 public class HotCircle : MonoBehaviour
 {
     public float damage = 10f;
+    private bool isFrozen = false;
+    public float kickSpeed = 5f; 
+    private Rigidbody2D rb2d;
+    private float lastKickTime = 0f;
     // Start is called before the first frame update
     void Start()
     {
-        
+        rb2d = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
@@ -27,10 +31,33 @@ public class HotCircle : MonoBehaviour
         }*/
         if (collision.gameObject.CompareTag("iceBullet"))
         {
-            FrozenCircle();
+            if(!isFrozen)
+            {
+                FrozenCircle();
+            }
         }
 
+
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (isFrozen)
+        {
+            if (collision.gameObject.CompareTag("Player"))
+            {
+                if (Time.time - lastKickTime > 0.3f)
+                {
+                    lastKickTime = Time.time;
+                    Debug.Log("Kick");
+                    Vector2 v = collision.GetContact(0).normal;
+                //Vector2 v2 = collision.gameObject.GetComponent<Rigidbody2D>().velocity.normalized;
+                    rb2d.velocity = new Vector2(v.x * kickSpeed, kickSpeed); 
+                }
+            }
+        }
+    }
+
     private void OnTriggerStay2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Player"))
@@ -41,12 +68,13 @@ public class HotCircle : MonoBehaviour
 
     private void FrozenCircle()
     {
-
+        isFrozen = true;
+        gameObject.tag = "FrozenCircle";
         GetComponent<Animator>().SetTrigger("Frozen");
-        GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
+        rb2d.bodyType = RigidbodyType2D.Dynamic;
         GetComponent<Collider2D>().isTrigger = false;
         Vector3 p = GetComponent<Patrol>().HotCircleFrozen();
-        GetComponent<Rigidbody2D>().velocity = (new Vector2(p.x, p.y) - new Vector2(transform.position.x, transform.position.y)).normalized * 0.5f;    
+        rb2d.velocity = (new Vector2(p.x, p.y) - new Vector2(transform.position.x, transform.position.y)).normalized * 0.5f;    
     }
 
     public void FrozenAnimEnd()

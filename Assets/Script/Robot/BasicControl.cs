@@ -68,10 +68,14 @@ public class BasicControl : MonoBehaviour
 
     void Update() 
     {
-        CheckGround();
-        doMovement();
+        CheckGround();  
         doShoot();
         heatUIUpdate();
+    }
+
+    private void FixedUpdate()
+    {
+        doMovement();
     }
 
     void CheckGround()
@@ -85,17 +89,22 @@ public class BasicControl : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(position, direction, groundCheckDistance, groundLayer);
         RaycastHit2D hit2 = Physics2D.Raycast(position2, direction, groundCheckDistance, groundLayer);
         jumpable = false;
+        
         if (hit.collider != null && hit.collider.CompareTag("Ground"))
         {
             jumpable = true;
             animator.SetTrigger("landing");
         }
-        if (hit2.collider != null && hit2.collider.CompareTag("Ground"))
+        else if (hit2.collider != null && hit2.collider.CompareTag("Ground"))
         {
             jumpable = true;
             animator.SetTrigger("landing");
         }
-
+        else
+        {
+            animator.ResetTrigger("landing");
+        }
+        
         UnityEngine.Debug.DrawRay(position, direction * groundCheckDistance, Color.red);
         UnityEngine.Debug.DrawRay(position2, direction * groundCheckDistance, Color.red);
         
