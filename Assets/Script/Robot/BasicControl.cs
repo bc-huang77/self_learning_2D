@@ -8,13 +8,13 @@ using UnityEngine;
 public class BasicControl : MonoBehaviour
 {
     //Basic
-    public float moveSpeed = 5f; // ½ÇÉ«ÒÆ¶¯ËÙ¶È
-    public float jumpForce = 5f; // ÌøÔ¾Á¦Á¿
+    public float moveSpeed = 5f; // ?0?5?0?5?0?7?0?0?0?6?0?4?0?9?0?4?0?9?0?2?0?9?0?6
+    public float jumpForce = 5f; // ?0?0?0?3?0?8?0?6?0?9?0?7?0?9?0?7
     private Rigidbody2D rb;
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private float faceRight = 1;
-    private bool isGrounded; // ÓÃÓÚ¼ì²â½ÇÉ«ÊÇ·ñÔÚµØÃæÉÏ
+    private bool isGrounded; // ?0?7?0?1?0?7?0?3?0?4ì?0?5?0?9?0?5?0?5?0?7?0?0?0?8?0?5·?0?9?0?8?0?3?0?8?0?1?0?1?0?3?0?7?0?3
     private bool canMove;
     private InputBuffer jumpBuffer;
     public float jumpBufferTime = 0.1f;
@@ -47,7 +47,7 @@ public class BasicControl : MonoBehaviour
         Walking,
         Running,
         Jumping,
-        // Ìí¼ÓÆäËû×´Ì¬...
+        // ?0?0í?0?4?0?7?0?4?0?1?0?9?0?4×?0?7?0?0?0?1...
     }
     private States states;
 
@@ -58,8 +58,8 @@ public class BasicControl : MonoBehaviour
         jumpBuffer.bufferTime = jumpBufferTime;
         jumpBuffer.setCommand("Jump");
 
-        rb = GetComponent<Rigidbody2D>(); // »ñÈ¡Rigidbody2D×é¼þ
-        animator = GetComponent<Animator>();//»ñÈ¡Animator×é¼þ
+        rb = GetComponent<Rigidbody2D>(); // ?0?3?0?9?0?6?0?3Rigidbody2D×é?0?4?0?6
+        animator = GetComponent<Animator>();//?0?3?0?9?0?6?0?3Animator×é?0?4?0?6
         spriteRenderer = GetComponent<SpriteRenderer>();
         states = States.Idle;
         canMove = true;
@@ -77,7 +77,7 @@ public class BasicControl : MonoBehaviour
     {
         doMovement();
     }
-
+// test
     void CheckGround()
     {
         // 射线的起点为角色的位置，方向向下
@@ -118,7 +118,7 @@ public class BasicControl : MonoBehaviour
             //animator.SetTrigger("landing");
             animator.ResetTrigger("falling");
             animator.ResetTrigger("jumping"); 
-            isGrounded = true; // Èç¹û½Ó´¥µ½µÄÊÇ¡°µØÃæ¡±¶ÔÏó£¬ÉèÖÃisGroundedÎªtrue
+            isGrounded = true; // ?0?6?0?4?0?1?0?4?0?5?0?7?0?7?0?6?0?8?0?5?0?8?0?2?0?8?0?5?0?3°?0?8?0?1?0?1?0?3?0?3±?0?9?0?8?0?3ó?0?5?0?1?0?7è?0?0?0?1isGrounded?0?2?0?9true
             animator.SetBool("onGround", true);
         }  
     }
@@ -131,11 +131,11 @@ public class BasicControl : MonoBehaviour
             
             if (!overHeat)
             {
-                // ¼ì²âÌøÔ¾°´¼ü£¨Ä¬ÈÏÎª¡°¿Õ¸ñ¼ü¡±£©
+                // ?0?4ì?0?5?0?9?0?0?0?3?0?8?0?6°?0?7?0?4ü?0?5¨?0?2?0?1?0?6?0?3?0?2?0?9?0?3°?0?7?0?9?0?0?0?9?0?4ü?0?3±?0?5?0?8
                 if (jumpBuffer.output && isGrounded && jumpable)
                 {
                     states = States.Jumping;
-                    rb.velocity = new Vector2(rb.velocity.x, jumpForce); // Ìí¼Ó´¹Ö±ËÙ¶ÈÒÔÊµÏÖÌøÔ¾
+                    rb.velocity = new Vector2(rb.velocity.x, jumpForce); // ?0?0í?0?4?0?7?0?7?0?1?0?0±?0?9?0?2?0?9?0?6?0?6?0?8?0?8?0?8?0?3?0?0?0?0?0?3?0?8?0?6
                     animator.SetTrigger("jumping");
                     isGrounded = false;
                     animator.SetBool("onGround", false);
@@ -157,15 +157,15 @@ public class BasicControl : MonoBehaviour
             }
 
 
-            // Ë®Æ½ÒÆ¶¯
-            float moveInput = Input.GetAxis("Horizontal"); // »ñÈ¡Ë®Æ½Öá£¨A/D»ò×óÓÒ¼ýÍ·£©ÊäÈë
+            // ?0?9?0?3?0?4?0?5?0?6?0?4?0?9?0?4
+            float moveInput = Input.GetAxis("Horizontal"); // ?0?3?0?9?0?6?0?3?0?9?0?3?0?4?0?5?0?0á?0?5¨A/D?0?3ò×ó?0?7?0?6?0?4?0?5?0?1·?0?5?0?8?0?8?0?1?0?6?0?5
             if (moveInput != 0 && faceRight * moveInput < 0)
             {
                 spriteRenderer.flipX = !spriteRenderer.flipX;
                 faceRight *= -1;
                 //Debug.Log("FlipX");
             }
-            rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y); // ÉèÖÃË®Æ½ËÙ¶È
+            rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y); // ?0?7è?0?0?0?1?0?9?0?3?0?4?0?5?0?9?0?2?0?9?0?6
             animator.SetFloat("speed", Math.Abs(rb.velocity.x));
 
 
@@ -183,7 +183,7 @@ public class BasicControl : MonoBehaviour
                 lastShotTime = Time.time;
                 Vector2 bias = faceRight == 1 ? new Vector2(0.55f, -0.15f) : new Vector2(-0.6f, -0.15f);
                 GameObject bullet = Instantiate(bulletPrefab, rb.position + bias, Quaternion.identity);
-                bullet.GetComponent<Rigidbody2D>().velocity = faceRight * transform.right * bulletSpeed; // ÉèÖÃ×Óµ¯ËÙ¶È
+                bullet.GetComponent<Rigidbody2D>().velocity = faceRight * transform.right * bulletSpeed; // ?0?7è?0?0?0?1×?0?7?0?8?0?4?0?9?0?2?0?9?0?6
                 bullet.GetComponent<SpriteRenderer>().flipX = faceRight == 1 ? false : true;
 
                 heatUsed += shootCost;
